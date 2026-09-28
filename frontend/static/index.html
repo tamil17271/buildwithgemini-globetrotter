@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GlobeTrotter — AI Travel Concierge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined">
+<style>
+  :root {
+    --accent: #0d9488;
+    --accent-dark: #0f766e;
+    --accent-light: #ccfbf1;
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --border: #e2e8f0;
+    --text-dark: #0f172a;
+    --text-muted: #64748b;
+    --input-bg: #f8fafc;
+    --chip-bg: #ffffff;
+    --chip-text: #334155;
+    --avatar-user-bg: #ccfbf1;
+    --avatar-agent-bg: #e0f2fe;
+    --bubble-user-gradient: linear-gradient(135deg, #0d9488, #0f766e);
+  }
+
+  [data-theme="dark"] {
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --border: #334155;
+    --text-dark: #f8fafc;
+    --text-muted: #94a3b8;
+    --input-bg: #0f172a;
+    --chip-bg: #1e293b;
+    --chip-text: #cbd5e1;
+    --avatar-user-bg: #115e59;
+    --avatar-agent-bg: #0369a1;
+    --bubble-user-gradient: linear-gradient(135deg, #0d9488, #14b8a6);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+
+  /* --- Header Banner --- */
+  header {
+    background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+    color: #fff;
+    padding: 0.8rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.15);
+    z-index: 10;
+  }
+  .brand { display: flex; align-items: center; gap: 0.75rem; }
+  .brand-icon {
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.35rem;
+    backdrop-filter: blur(4px);
+  }
+  .brand-titles { display: flex; flex-direction: column; }
+  .brand-name { font-weight: 700; font-size: 1.25rem; letter-spacing: -0.01em; }
+  .brand-sub { font-size: 0.78rem; opacity: 0.9; font-weight: 400; }
+  
+  .header-actions { display: flex; align-items: center; gap: 0.75rem; }
+  .status-badge {
+    display: flex; align-items: center; gap: 0.4rem;
+    font-size: 0.8rem; font-weight: 500;
+    background: rgba(255,255,255,0.18);
+    padding: 0.35rem 0.8rem; border-radius: 20px;
+    backdrop-filter: blur(4px);
+  }
+  .status-dot { width: 8px; height: 8px; background: #34d399; border-radius: 50%; box-shadow: 0 0 6px #34d399; }
+
+  .theme-btn {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    border: none;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: all 0.2s ease;
+  }
+  .theme-btn:hover { background: rgba(255,255,255,0.3); }
+
+  /* --- Categories Bar --- */
+  .categories-bar {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .category-pill {
+    background: var(--bg);
+    color: var(--chip-text);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .category-pill:hover {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
+  }
+
+  /* --- Chat Area --- */
+  #log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem 1rem;
+    max-width: 840px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  /* Welcome Hero Card */
+  .hero-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    margin-bottom: 0.5rem;
+  }
+  .hero-title { font-size: 1.3rem; font-weight: 700; margin: 0 0 0.4rem; color: var(--accent); }
+  .hero-subtitle { font-size: 0.9rem; color: var(--text-muted); margin: 0 0 1.2rem; }
+  .hero-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; text-align: left; }
+  .hero-feature {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.8rem;
+    font-size: 0.85rem;
+  }
+  .hero-feature-title { font-weight: 600; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.4rem; }
+
+  /* Messages */
+  .msg {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    animation: fadeIn 0.25s ease-out forwards;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .msg.user { flex-direction: row-reverse; }
+  
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+    background: var(--avatar-agent-bg); border: 1px solid var(--border);
+  }
+  .msg.user .avatar { background: var(--avatar-user-bg); }
+
+  .bubble {
+    display: inline-block;
+    padding: 0.8rem 1.15rem;
+    border-radius: 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    text-align: left;
+    max-width: 80%;
+    white-space: pre-wrap;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    border-bottom-left-radius: 4px;
+    color: var(--text-dark);
+  }
+  .msg.user .bubble {
+    background: var(--bubble-user-gradient);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 3px 10px rgba(13, 148, 136, 0.25);
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 4px;
+  }
+  .bubble.rich {
+    background: transparent;
+    border: none;
+    padding: 0;
+    max-width: 100%;
+    white-space: normal;
+    box-shadow: none;
+  }
+
+  /* Animated Loading Indicator */
+  .loading-box {
+    display: flex; align-items: center; gap: 0.6rem;
+    color: var(--text-muted); font-size: 0.9rem; font-weight: 500;
+  }
+  .plane-fly {
+    display: inline-block;
+    animation: planeBounce 1.2s infinite ease-in-out;
+  }
+  @keyframes planeBounce {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-4px) rotate(8deg); }
+  }
+
+  /* --- Tool & Prompts Container --- */
+  .bottom-tools-container {
+    max-width: 840px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0.4rem 1rem 0.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .toolbox-row {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .tool-btn {
+    background: var(--card-bg);
+    color: var(--text-muted);
+    border: 1px dashed var(--border);
+    border-radius: 14px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .tool-btn:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--bg);
+  }
+
+  .prompts-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .prompt-chip {
+    background: var(--chip-bg);
+    color: var(--chip-text);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.45rem 0.95rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .prompt-chip:hover {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.2);
+  }
+
+  /* --- Footer Input Bar --- */
+  .footer-bar {
+    background: var(--card-bg);
+    border-top: 1px solid var(--border);
+    padding: 0.9rem 1rem 1.1rem;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.03);
+  }
+  form {
+    display: flex;
+    gap: 0.6rem;
+    max-width: 840px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  input {
+    flex: 1;
+    padding: 0.8rem 1.2rem;
+    border: 1.5px solid var(--border);
+    border-radius: 24px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s ease;
+    background: var(--input-bg);
+    color: var(--text-dark);
+  }
+  input:focus {
+    background: var(--card-bg);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  }
+  button.send-btn {
+    padding: 0.8rem 1.4rem;
+    border: none;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    color: #fff;
+    font-weight: 600;
+    font-family: inherit;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25);
+  }
+  button.send-btn:hover {
+    background: linear-gradient(135deg, #0f766e, #115e59);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);
+  }
+
+  /* Lightbox Modal */
+  .lightbox-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center;
+    z-index: 1000; backdrop-filter: blur(5px);
+    cursor: pointer;
+  }
+  .lightbox-img {
+    max-width: 90%; max-height: 85vh; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+
+  /* --- A2UI component styles --- */
+  .a2card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.1rem;
+    background: var(--card-bg);
+    box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+    max-width: 100%;
+  }
+  .a2card + .a2card, .a2col > .a2card { margin-top: 0.6rem; }
+  .a2col { display: flex; flex-direction: column; gap: 0.5rem; }
+  .a2row { display: flex; flex-direction: row; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+  .a2row.between { justify-content: space-between; }
+  .a2text { margin: 0; line-height: 1.45; color: var(--text-dark); }
+  .a2text.a2-h1 { font-size: 1.4rem; font-weight: 700; color: var(--text-dark); }
+  .a2text.a2-h2 { font-size: 1.2rem; font-weight: 700; color: var(--text-dark); }
+  .a2text.a2-h3 { font-size: 1.05rem; font-weight: 600; color: var(--text-dark); }
+  .a2text.a2-h4 { font-size: 0.95rem; font-weight: 600; color: var(--text-dark); }
+  .a2text.a2-caption { font-size: 0.85rem; color: var(--text-muted); }
+  .a2divider { border: none; border-top: 1px solid var(--border); margin: 0.5rem 0; width: 100%; }
+  .a2img { max-width: 100%; border-radius: 10px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.08); cursor: pointer; transition: transform 0.2s; }
+  .a2img:hover { transform: scale(1.02); }
+  .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-size: 1.25rem; line-height: 1; vertical-align: middle; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">✈️</div>
+    <div class="brand-titles">
+      <span class="brand-name">GlobeTrotter</span>
+      <span class="brand-sub">AI Travel & Itinerary Concierge</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="theme-btn" id="themeToggle">🌙 Dark</button>
+    <div class="status-badge">
+      <span class="status-dot"></span> Online
+    </div>
+  </div>
+</header>
+
+<div class="categories-bar">
+  <button type="button" class="category-pill" onclick="sendPrompt('Suggest top beach & tropical resort destinations')">🏝️ Beach & Tropical</button>
+  <button type="button" class="category-pill" onclick="sendPrompt('Show historic and cultural travel spots')">⛩️ Cultural & Historic</button>
+  <button type="button" class="category-pill" onclick="sendPrompt('Recommend scenic nature and mountain hiking trips')">🏔️ Nature & Hiking</button>
+  <button type="button" class="category-pill" onclick="sendPrompt('Find top food cities and dining experiences')">🍽️ Food & Culinary</button>
+  <button type="button" class="category-pill" onclick="sendPrompt('Search luxury boutique hotels and stays')">🏨 Luxury Resorts</button>
+</div>
+
+<div id="log">
+  <div class="hero-card" id="heroCard">
+    <div class="hero-title">🌍 Welcome to GlobeTrotter!</div>
+    <div class="hero-subtitle">Your personalized AI concierge for itineraries, hotel search, budget calculations, and destination previews.</div>
+    <div class="hero-grid">
+      <div class="hero-feature">
+        <div class="hero-feature-title">🗺️ Custom Itineraries</div>
+        Get multi-day travel plans formatted as interactive A2UI cards.
+      </div>
+      <div class="hero-feature">
+        <div class="hero-feature-title">🧮 Budget Calculator</div>
+        Compute multi-city travel expenses and currency conversions.
+      </div>
+      <div class="hero-feature">
+        <div class="hero-feature-title">☀️ Weather & Attractions</div>
+        Check real-time climate forecasts and venue recommendations.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-tools-container">
+  <div class="toolbox-row">
+    <button type="button" class="tool-btn" onclick="sendPrompt('Calculate total budget breakdown for 4 days travel with 2 people')">🧮 Budget Math</button>
+    <button type="button" class="tool-btn" onclick="sendPrompt('Check current weather and best season to visit Tokyo')">☀️ Weather Check</button>
+    <button type="button" class="tool-btn" onclick="sendPrompt('Search recommended hotels and boutique stays in Paris')">🏨 Hotel Search</button>
+    <button type="button" class="tool-btn" onclick="sendPrompt('Generate a visual preview of a tropical beach resort')">📸 Generate Visual</button>
+  </div>
+  <div class="prompts-row">
+    <button type="button" class="prompt-chip" onclick="sendPrompt('Suggest 3-day itinerary for Tokyo')">🗼 3-day Tokyo itinerary</button>
+    <button type="button" class="prompt-chip" onclick="sendPrompt('Calculate trip budget for 5 days in Paris')">💶 5-day Paris budget</button>
+    <button type="button" class="prompt-chip" onclick="sendPrompt('Check weather and top attractions in Kyoto')">⛩️ Kyoto weather & spots</button>
+  </div>
+</div>
+
+<div class="footer-bar">
+  <form id="form">
+    <input id="input" placeholder="Where would you like to travel next? Ask GlobeTrotter…" autocomplete="off" autofocus>
+    <button class="send-btn"><span>Send</span> ✈️</button>
+  </form>
+</div>
+
+<!-- Image Lightbox Modal -->
+<div class="lightbox-overlay" id="lightbox">
+  <img class="lightbox-img" id="lightboxImg" src="" alt="Full view">
+</div>
+
+<script>
+const log = document.getElementById("log");
+const form = document.getElementById("form");
+const input = document.getElementById("input");
+const heroCard = document.getElementById("heroCard");
+const themeToggle = document.getElementById("themeToggle");
+const lightbox = document.getElementById("lightbox");
+const lightboxImg = document.getElementById("lightboxImg");
+
+// Dark Mode Toggle
+themeToggle.addEventListener("click", () => {
+  const isDark = document.body.getAttribute("data-theme") === "dark";
+  if (isDark) {
+    document.body.removeAttribute("data-theme");
+    themeToggle.textContent = "🌙 Dark";
+  } else {
+    document.body.setAttribute("data-theme", "dark");
+    themeToggle.textContent = "☀️ Light";
+  }
+});
+
+// Image Lightbox
+lightbox.addEventListener("click", () => { lightbox.style.display = "none"; });
+function openLightbox(src) {
+  lightboxImg.src = src;
+  lightbox.style.display = "flex";
+}
+
+function sendPrompt(text) {
+  input.value = text;
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+}
+
+function hideHero() {
+  if (heroCard) heroCard.style.display = "none";
+}
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+function bubble(who) {
+  hideHero();
+  const m = el("div", "msg " + who);
+  const avatar = el("div", "avatar", who === "user" ? "👤" : "🌍");
+  const b = el("div", "bubble");
+  m.appendChild(avatar);
+  m.appendChild(b);
+  log.appendChild(m);
+  log.scrollTop = log.scrollHeight;
+  return b;
+}
+
+/* ----------------------------------------------------------------------------
+ * A2UI mini-renderer (v0.8 Basic Catalog subset).
+ * Renders Card / Column / Row / Text / Divider / List / Image / Icon.
+ * -------------------------------------------------------------------------- */
+
+function boundStr(v) {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v.literalString === "string") return v.literalString;
+  return "";
+}
+
+function childIds(props) {
+  const ids = [];
+  if (props && typeof props.child === "string") ids.push(props.child);
+  const ch = props && props.children;
+  if (ch && Array.isArray(ch.explicitList)) for (const c of ch.explicitList) if (typeof c === "string") ids.push(c);
+  return ids;
+}
+
+function iconName(n) { return String(n || "").replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/\s+/g, "_").toLowerCase(); }
+
+function buildNode(id, comps, seen) {
+  if (!id || seen.has(id)) return null;
+  seen.add(id);
+  const spec = comps[id];
+  if (!spec || typeof spec !== "object") return null;
+  const type = Object.keys(spec)[0];
+  const props = spec[type] || {};
+  const kids = () => childIds(props).map(cid => buildNode(cid, comps, seen)).filter(Boolean);
+
+  switch (type) {
+    case "Card": {
+      const d = el("div", "a2card"); kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Column":
+    case "List": {
+      const horizontal = type === "List" && props.direction === "horizontal";
+      const d = el("div", horizontal ? "a2row" : "a2col"); kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Row": {
+      const d = el("div", "a2row" + (props.distribution === "spaceBetween" ? " between" : ""));
+      kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Text": {
+      const t = el("div", "a2text");
+      const hint = String(props.usageHint || "body").toLowerCase();
+      if (["h1", "h2", "h3", "h4", "h5", "h6"].includes(hint)) t.classList.add("a2-" + hint);
+      else if (hint === "caption") t.classList.add("a2-caption");
+      t.textContent = boundStr(props.text);
+      return t;
+    }
+    case "Divider":
+      return el("hr", "a2divider");
+    case "Image": {
+      const src = boundStr(props.url || props.src);
+      if (!/^https?:\/\//i.test(src)) return null;
+      const img = el("img", "a2img"); img.src = src; img.alt = boundStr(props.alt) || "";
+      img.onclick = () => openLightbox(src);
+      return img;
+    }
+    case "Icon": {
+      const s = el("span", "material-symbols-outlined"); s.textContent = iconName(boundStr(props.name) || props.name); return s;
+    }
+    default:
+      return null;
+  }
+}
+
+function renderSurface(messages, container) {
+  const comps = {};
+  const roots = [];
+  for (const m of messages) {
+    if (m.beginRendering && typeof m.beginRendering.root === "string") roots.push(m.beginRendering.root);
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.id && c.component) comps[c.id] = c.component;
+  }
+  let rootIds = roots.filter(r => comps[r]);
+  if (rootIds.length === 0) {
+    const referenced = new Set();
+    for (const id in comps) { const spec = comps[id]; childIds(spec[Object.keys(spec)[0]] || {}).forEach(c => referenced.add(c)); }
+    rootIds = Object.keys(comps).filter(id => !referenced.has(id));
+  }
+  let drew = false;
+  for (const rid of rootIds) { const node = buildNode(rid, comps, new Set()); if (node) { container.appendChild(node); drew = true; } }
+  return drew;
+}
+
+function flattenText(messages) {
+  const out = [];
+  for (const m of messages) {
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.component && c.component.Text) out.push(boundStr(c.component.Text.text));
+  }
+  return out.join("\n").trim();
+}
+
+function renderReply(b, parts) {
+  b.textContent = "";
+  const texts = parts.filter(p => p && (p.kind === "text" || (!p.kind && p.text))).map(p => p.text || "");
+  const a2ui = parts.filter(p => p && p.kind === "a2ui" && p.data).map(p => p.data);
+
+  const textStr = texts.join("\n").trim();
+  if (textStr) b.appendChild(el("div", null, textStr));
+
+  if (a2ui.length) {
+    b.classList.add("rich");
+    if (!renderSurface(a2ui, b)) b.appendChild(el("div", null, flattenText(a2ui) || "(no card content)"));
+  }
+  if (!b.childNodes.length) b.textContent = "(no response)";
+  log.scrollTop = log.scrollHeight;
+}
+
+form.addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const text = input.value.trim();
+  if (!text) return;
+  bubble("user").textContent = text;
+  input.value = "";
+  const b = bubble("agent");
+  
+  // Custom animated flying plane loading state
+  const loadBox = el("div", "loading-box");
+  const plane = el("span", "plane-fly", "✈️");
+  const loadTxt = el("span", null, "GlobeTrotter is planning your trip...");
+  loadBox.appendChild(plane); loadBox.appendChild(loadTxt);
+  b.appendChild(loadBox);
+
+  try {
+    const res = await fetch("/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: text }) });
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); }
+    catch { throw new Error(`Server returned non-JSON (HTTP ${res.status}). ${raw.slice(0, 300)}`); }
+    renderReply(b, data.parts || []);
+  } catch (e) {
+    b.textContent = "Error: " + e.message;
+  }
+});
+</script>
+</body>
+</html>
